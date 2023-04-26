@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package mypackage;
+
+option go_package = "github.com/sanghvisagar/go-server";
+
+
+service MyService {
+    rpc MyMethod(MyRequest) returns (MyResponse) {}
+}
+
+message MyRequest {
+    string name = 1;
+}
+
+message MyResponse {
+    string message = 1;
+}
+
+
