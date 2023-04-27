@@ -9,24 +9,49 @@ import (
 )
 
 var primeNumCount int32 = 0
-var max_int int32 = 100000000
+var max_int int32 = 10000
 
 // var batch_size = 1000000
 var concurrency = 10
+var currentNum int32 = 2
 
 func main() {
 	var wg sync.WaitGroup
+
+	threadPrimeCountChannel := make(chan int, concurrency)
 
 	batch_size := int(max_int / int32(concurrency))
 	start := 0
 	for i := 1; i <= concurrency; i++ {
 		wg.Add(1)
-		go checkPrimeGoRoutine(i, start, start+batch_size, &wg)
+		// go checkPrimeGoRoutine(i, start, start+batch_size, &wg)
+		go doWork(i, &wg, threadPrimeCountChannel)
 		start = start + batch_size
 	}
 
 	wg.Wait()
+	for i := 1; i <= concurrency; i++ {
+		fmt.Println(<-threadPrimeCountChannel)
+	}
+
 	fmt.Println("Total No. of primes ", primeNumCount)
+}
+
+func doWork(routineNum int, wg *sync.WaitGroup, threadPrimeCountChannel chan int) {
+	start := time.Now()
+	defer wg.Done()
+	i := 0
+	for {
+		x := atomic.AddInt32(&currentNum, 1)
+		if x > max_int {
+			break
+		}
+		checkPrime(int(x))
+		i++
+	}
+	threadPrimeCountChannel <- i
+
+	fmt.Printf("Thread %d completed in %s\n", routineNum, time.Since(start))
 }
 
 func checkPrimeGoRoutine(batchNum int, start int, end int, wg *sync.WaitGroup) {
